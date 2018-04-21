@@ -1,38 +1,62 @@
+import multiprocessing
 import socket
+import os
+import sys
+import threading
 import configparser
-import logging
 
-log = logging.getLogger('udp_server')
-config = configparser.ConfigParser()
-config.read('./settings.ini')
+def initializeThreads(newstdin):
+    initReceiverThread(serverAddressPort)
+    # initRecipientThread()
+    # initPersistenceThread()
+    # initResponseThread()
 
-host = str(config.get('SERVER', 'host'))
-port = int(config.get('SERVER', 'port'))
+def initReceiverThread(serverAddressPort):
+    process = multiprocessing.Process(target = receiverThread, args = (serverAddressPort, ))
+    jobs.append(process)
 
-def udp_server(host=host, port=port):
+def receiverThread(serverAddressPort):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-    log.info("Listening on udp %s:%s" % (host, port))
-    s.bind((host, port))
+    log.info("Listening on udp %s:%s" % serverAddressPort)
+    s.bind(serverAddressPort)
     while True:
         (data, addr) = s.recvfrom(1400)
-        yield data
+        print(data)
 
-FORMAT_CONS = '%(asctime)s %(name)-12s %(levelname)8s\t%(message)s'
-logging.basicConfig(level=logging.DEBUG, format=FORMAT_CONS)
+config = configparser.ConfigParser()
+config.read('./settings.ini')
 
-for data in udp_server():
-    print(data)
-# def onNewConnection(clientSocket, addr):
-#     while 1:
-#         msg = raw_input()
-#         clientSocket.send(msg)
-#     clientSocket.close()
+serverAddressPort   = (str(config.get('SERVER', 'host')), int(config.get('SERVER', 'port')))
+bufferSize          = int(config.get('SERVER', 'packetBytes'))
+UDPClientSocket     = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+UDPServerSocket.bind(serverAddressPort)
+jobs                = []
 
-# while True:
-#     c, addr = s.recvfrom(1400)
-#     print('Got connection from', addr)
-#     c.send('Thank you for connecting')
-#     thread.start_new_thread(onNewConnection, (c,addr))
-# s.close()
+def main():
+    newstdin = os.fdopen(os.dup(sys.stdin.fileno()))
+    initializeThreads(newstdin)
+
+    for j in jobs:
+        j.start()
+
+    for j in jobs:
+        j.join()
+
+if __name__ == '__main__':
+    main()
+
+# Listen for incoming datagrams
+# while(True):
+#     bytesAddressPair = UDPServerSocket.recvfrom(bufferSize)
+#     message = bytesAddressPair[0]
+#     address = bytesAddressPair[1]
+#     clientMsg = "Message from Client:{}".format(message)
+#     clientIP  = "Client IP Address:{}".format(address)
+
+#     print(clientMsg)
+#     print(clientIP)
+
+#     # Sending a reply to client
+#     UDPServerSocket.sendto(bytesToSend, address)

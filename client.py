@@ -1,48 +1,54 @@
 import multiprocessing
 import socket
 import os
+import sys
+import threading
 import configparser
 
-config = configparser.ConfigParser()
-config.read('./settings.ini')
+def initializeThreads(newstdin):
+    initializeCommandThread(newstdin)
+    initializeDisplayThread()
 
-def initializeThreads():
-    initializeCommandThread()
-    # initializeDisplayThread()
-
-def sendCommand():
-    while True:
-        try:
-            msg = raw_input('Type')
-        except EOFError:
-            return
-        s.sendto(msg, server_address)
-
-def receiveCommand():
-    while True:
-        print s.recvfrom(1400)
-
-def initializeCommandThread():
-    process = multiprocessing.Process(target = sendCommand, args = ())
+def initializeCommandThread(newstdin):
+    process = multiprocessing.Process(target = sendCommand, args = (newstdin, ))
     jobs.append(process)
 
 def initializeDisplayThread():
     process = multiprocessing.Process(target = receiveCommand, args = ())
     jobs.append(process)
 
-s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-host = config.get('CLIENT', 'host')
-port = config.get('CLIENT', 'port')
+def sendCommand(newstdin):
+    sys.stdin = newstdin
+    while True:
+        try:
+            command = raw_input('Qual comando deseja realizar? (C,R,U,D)')
+            mapItem = raw_input('Item que deseja realizar a operacao: ')
+        except EOFError:
+            return
+        UDPClientSocket.sendto(str.encode(command+mapItem), serverAddressPort)
 
-server_address = (host, port)
+def receiveCommand():
+    while True:
+        msgFromServer = UDPClientSocket.recvfrom(bufferSize)
+        msg = "Message from Server {}".format(msgFromServer[0])
+        print(msg)
 
-# s.connect((str(host), int(port)))
-jobs = []
-initializeThreads()
+config              = configparser.ConfigParser()
+config.read('./settings.ini')
+serverAddressPort   = (str(config.get('SERVER', 'host')), int(config.get('SERVER', 'port')))
+bufferSize          = int(config.get('SERVER', 'packetBytes'))
+UDPClientSocket     = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+jobs                = []
 
-for j in jobs:
-    j.start()
+def main():
+    newstdin = os.fdopen(os.dup(sys.stdin.fileno()))
+    initializeThreads(newstdin)
 
-for j in jobs:
-    j.join()
-s.close()
+    for j in jobs:
+        j.start()
+
+    for j in jobs:
+        j.join()
+
+if __name__ == '__main__':
+    main()
