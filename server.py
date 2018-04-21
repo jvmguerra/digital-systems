@@ -19,10 +19,9 @@ def receiverThread(serverAddressPort):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-    log.info("Listening on udp %s:%s" % serverAddressPort)
     s.bind(serverAddressPort)
     while True:
-        (data, addr) = s.recvfrom(1400)
+        (data, addr) = s.recvfrom(bufferSize)
         print(data)
 
 config = configparser.ConfigParser()
@@ -30,8 +29,6 @@ config.read('./settings.ini')
 
 serverAddressPort   = (str(config.get('SERVER', 'host')), int(config.get('SERVER', 'port')))
 bufferSize          = int(config.get('SERVER', 'packetBytes'))
-UDPClientSocket     = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-UDPServerSocket.bind(serverAddressPort)
 jobs                = []
 
 def main():
