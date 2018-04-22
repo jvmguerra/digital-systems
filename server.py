@@ -5,6 +5,30 @@ import sys
 import threading
 import configparser
 
+dict = {}
+
+def createNewItem(mapItem):
+    dict.update(mapItem)
+
+def deleteItem(mapItem):
+    try:
+        del dict[mapItem]
+        return True
+    except:
+        return False
+
+def readItem(mapItem):
+    if dict.get(mapItem) is none:
+        return False
+    return dict[mapItem]
+
+def updateItem(mapItem):
+    if dict.get(mapItem) is none:
+        return False
+    else:
+        dict.update(mapItem)
+        return True
+
 def initializeThreads(newstdin):
     initReceiverThread(serverAddressPort)
     # initRecipientThread()
