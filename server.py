@@ -4,6 +4,27 @@ import os
 import sys
 import threading
 import configparser
+import json
+
+dict = {'python': 'py', 'c++': 'cpp'}
+
+def onSaveJsonInFile():
+    process = multiprocessing.Process(target = saveJson)
+    process.start()
+
+def saveJson():
+    jsonTest = json.dumps(dict)
+    file = open('data.json', 'w')
+    file.write(jsonTest)
+    file.close()
+
+def readFile():
+    file = open('data.json', 'r')
+    jsonTeste = json.load(file)
+    print(jsonTeste)
+
+onSaveJsonInFile()
+
 
 def initializeThreads(newstdin):
     initReceiverThread(serverAddressPort)
