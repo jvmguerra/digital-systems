@@ -25,11 +25,11 @@ def sendCommand(newstdin):
         try:
             message = ''
             time.sleep(.1)
-            command = raw_input('Qual comando deseja realizar? (1: C, 2: R, 3: U, 4: D): ')
-            mapItem = raw_input('Item que deseja realizar a operacao: ')
+            command = input('Qual comando deseja realizar? (1: C, 2: R, 3: U, 4: D): ')
+            mapItem = input('Item que deseja realizar a operacao: ')
             if validator(command, mapItem):
                 if (int(command) == 1 or int(command) == 3):
-                    message = raw_input('String: ')
+                    message = str(input('String: '))
                 jsonItem = {
                     'command': command,
                     'item': mapItem,
@@ -51,8 +51,8 @@ def validator(command, mapItem):
 def receiveCommand():
     while True:
         msgFromServer = UDPClientSocket.recvfrom(bufferSize)
-        msg = "\nMessage from Server: {}".format(msgFromServer[0])
-        print(msg)
+        msg = "\nMessage from Server: "
+        print(msg + str(msgFromServer[0].decode()))
 
 config              = configparser.ConfigParser()
 config.read('./settings.ini')
