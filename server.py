@@ -1,28 +1,97 @@
 import multiprocessing
+from multiprocessing.managers import BaseManager
 import socket
 import os
 import sys
 import threading
 import configparser
+import json
+from classes.pile import Pile
+from classes.structure import Structure
 
-def initializeThreads(newstdin):
-    initReceiverThread(serverAddressPort)
-    # initRecipientThread()
-    # initPersistenceThread()
-    # initResponseThread()
+class MyManager(BaseManager):
+    pass
 
-def initReceiverThread(serverAddressPort):
-    process = multiprocessing.Process(target = receiverThread, args = (serverAddressPort, ))
+MyManager.register('Pile', Pile)
+MyManager.register('Structure', Structure)
+
+def initializeThreads(newstdin, commandsPile, persistencePile, responsePile, memory):
+    initReceiverThread(serverAddressPort, commandsPile)
+    initRecipientThread(commandsPile, persistencePile, responsePile, memory)
+    initPersistenceThread(persistencePile, memory)
+    initResponseThread(responsePile)
+
+def initReceiverThread(serverAddressPort, commandsPile):
+    process = multiprocessing.Process(target = receiverThread, args = (serverAddressPort, commandsPile))
     jobs.append(process)
 
-def receiverThread(serverAddressPort):
+def initRecipientThread(commandsPile, persistencePile, responsePile, memory):
+    process = multiprocessing.Process(target = recipientThread, args = (commandsPile, persistencePile, responsePile, memory))
+    jobs.append(process)
+
+def initPersistenceThread(persistencePile, memory):
+    process = multiprocessing.Process(target = persistenceThread, args = (persistencePile, memory))
+    jobs.append(process)
+
+def initResponseThread(responsePile):
+    process = multiprocessing.Process(target = responseThread, args = (responsePile, ))
+    jobs.append(process)
+
+def receiverThread(serverAddressPort, commandsPile):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     s.bind(serverAddressPort)
     while True:
         (data, addr) = s.recvfrom(bufferSize)
-        print(data)
+        clientData = {
+            'client': addr,
+            'data': json.loads(data.decode())
+        }
+        commandsPile.insert(clientData)
+
+def recipientThread(commandsPile, persistencePile, responsePile, memory):
+    while True:
+        if not commandsPile.empty():
+            message = 'Sucesso'
+
+            # execute task
+            task = commandsPile.remove()
+            command = int(task['data']['command'])
+            item = task['data']['item']
+            string = task['data']['string']
+
+            if(command == 1):
+                memory.createItem({item: string})
+            elif(command == 2):
+                itemFound = memory.readItem(item)
+                message = 'Item não encontrado' if not itemFound else itemFound
+            elif(command == 3):
+                message = 'Atualizado com sucesso' if memory.updateItem({item: string}) else 'Item não encontrado'
+            elif(command == 4):
+                message = 'Deletado com sucesso' if memory.deleteItem(item) else 'Falha ao deletar'
+
+            # send command to persistencePile
+            persistencePile.insert(memory.readAll())
+
+            # send message y/n to responsePile
+            responsePile.insert({
+                'message': message,
+                'client': task['client']
+            })
+
+def persistenceThread(persistencePile, memory):
+    while True:
+        if not persistencePile.empty():
+            task = persistencePile.remove()
+            memory.saveItems(task)
+
+def responseThread(responsePile):
+    while True:
+        if not responsePile.empty():
+            task = responsePile.remove()
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.sendto(task['message'].encode(), (str(task['client'][0]), int(task['client'][1])))
 
 config = configparser.ConfigParser()
 config.read('./settings.ini')
@@ -32,28 +101,27 @@ bufferSize          = int(config.get('SERVER', 'packetBytes'))
 jobs                = []
 
 def main():
+
+    # Managers - Custom classes accessed by multiple processes
+    manager = MyManager()
+    manager.start()
+    commandsPile = manager.Pile()
+    persistencePile = manager.Pile()
+    responsePile = manager.Pile()
+
+    # Shared memory
+    memory = manager.Structure()
+    memory.loadItems()
+
+    # Initializes all of the servers 4 'threads'
     newstdin = os.fdopen(os.dup(sys.stdin.fileno()))
-    initializeThreads(newstdin)
+    initializeThreads(newstdin, commandsPile, persistencePile, responsePile, memory)
 
-    for j in jobs:
-        j.start()
+    for job in jobs:
+        job.start()
 
-    for j in jobs:
-        j.join()
+    for job in jobs:
+        job.join()
 
 if __name__ == '__main__':
     main()
-
-# Listen for incoming datagrams
-# while(True):
-#     bytesAddressPair = UDPServerSocket.recvfrom(bufferSize)
-#     message = bytesAddressPair[0]
-#     address = bytesAddressPair[1]
-#     clientMsg = "Message from Client:{}".format(message)
-#     clientIP  = "Client IP Address:{}".format(address)
-
-#     print(clientMsg)
-#     print(clientIP)
-
-#     # Sending a reply to client
-#     UDPServerSocket.sendto(bytesToSend, address)

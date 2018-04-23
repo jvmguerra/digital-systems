@@ -4,6 +4,8 @@ import os
 import sys
 import threading
 import configparser
+import json
+import time
 
 def initializeThreads(newstdin):
     initializeCommandThread(newstdin)
@@ -21,16 +23,35 @@ def sendCommand(newstdin):
     sys.stdin = newstdin
     while True:
         try:
-            command = raw_input('Qual comando deseja realizar? (C,R,U,D)')
+            message = ''
+            time.sleep(.1)
+            command = raw_input('Qual comando deseja realizar? (1: C, 2: R, 3: U, 4: D): ')
             mapItem = raw_input('Item que deseja realizar a operacao: ')
+            if validator(command, mapItem):
+                if (int(command) == 1 or int(command) == 3):
+                    message = raw_input('String: ')
+                jsonItem = {
+                    'command': command,
+                    'item': mapItem,
+                    'string': message
+                }
+                UDPClientSocket.sendto(str.encode(json.dumps(jsonItem)), serverAddressPort)
+            else:
+                print('Dados Invalidos')
         except EOFError:
             return
-        UDPClientSocket.sendto(str.encode(command+mapItem), serverAddressPort)
+
+def validator(command, mapItem):
+    try:
+        if (int(command) >= 1 and int(command) <=4 and int(mapItem)):
+            return True
+    except:
+        return False
 
 def receiveCommand():
     while True:
         msgFromServer = UDPClientSocket.recvfrom(bufferSize)
-        msg = "Message from Server {}".format(msgFromServer[0])
+        msg = "\nMessage from Server: {}".format(msgFromServer[0])
         print(msg)
 
 config              = configparser.ConfigParser()
