@@ -1,3 +1,9 @@
+from concurrent import futures
+import time
+import grpc
+import crud_pb2
+import crud_pb2_grpc
+
 import multiprocessing
 from multiprocessing.managers import BaseManager
 import socket
@@ -8,6 +14,9 @@ import configparser
 import json
 from classes.pile import Pile
 from classes.structure import Structure
+from classes.crudGrpc import CrudGrpc
+
+_ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
 class MyManager(BaseManager):
     pass
@@ -17,12 +26,17 @@ MyManager.register('Structure', Structure)
 
 def initializeThreads(newstdin, commandsPile, persistencePile, responsePile, memory):
     initReceiverThread(serverAddressPort, commandsPile)
+    initReceiverGrpcThread(serverAddressPort, commandsPile)
     initRecipientThread(commandsPile, persistencePile, responsePile, memory)
     initPersistenceThread(persistencePile, memory)
     initResponseThread(responsePile)
 
 def initReceiverThread(serverAddressPort, commandsPile):
     process = multiprocessing.Process(target = receiverThread, args = (serverAddressPort, commandsPile))
+    jobs.append(process)
+
+def initReceiverGrpcThread(serverAddressPort, commandsPile):
+    process = multiprocessing.Process(target = receiverGrpcThread, args = (serverAddressPort, commandsPile))
     jobs.append(process)
 
 def initRecipientThread(commandsPile, persistencePile, responsePile, memory):
@@ -36,6 +50,18 @@ def initPersistenceThread(persistencePile, memory):
 def initResponseThread(responsePile):
     process = multiprocessing.Process(target = responseThread, args = (responsePile, ))
     jobs.append(process)
+
+def receiverGrpcThread(serverAddressPort, commandsPile):
+    # print(serverAddressPort)
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    crud_pb2_grpc.add_CrudGrpcServicer_to_server(CrudGrpc(commandsPile), server)
+    server.add_insecure_port(serverAddressPort[0] + ':' + str(serverAddressPort[1]))
+    server.start()
+    try:
+        while True:
+            time.sleep(_ONE_DAY_IN_SECONDS)
+    except KeyboardInterrupt:
+        server.stop(0)
 
 def receiverThread(serverAddressPort, commandsPile):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
