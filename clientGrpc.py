@@ -30,12 +30,15 @@ def sendCommand(newstdin):
     sys.stdin = newstdin
     while True:
         try:
+            monitoring = '0'
             message = ''
             time.sleep(.1)
-            command = input('Qual comando deseja realizar? (1: C, 2: R, 3: U, 4: D): ')
-            mapItem = input('Item que deseja realizar a operacao: ')
-            if int(command) != 4:
+            command = input('Qual comando deseja realizar? (1: C, 2: R, 3: U, 4: D, 5: M): ')
+            
+            if int(command) == 5:
                 monitoring = input('Deseja monitorar o item? (0: N, 1: S): ')
+
+            mapItem = input('Item que deseja realizar a operacao: ')
             if validator(command, mapItem):
                 if (int(command) == 1 or int(command) == 3):
                     message = str(input('String: '))
@@ -62,7 +65,7 @@ def sendCommand(newstdin):
 
 def validator(command, mapItem):
     try:
-        if (int(command) >= 1 and int(command) <=4 and int(mapItem)):
+        if (int(command) >= 1 and int(command) <=5 and int(mapItem)):
             return True
     except:
         return False
