@@ -96,6 +96,7 @@ def recipientThread(commandsPile, persistencePile, responsePile, memory):
             elif(command == 3):
                 message = 'Atualizado com sucesso' if memory.updateItem({item: string}) else 'Item não encontrado'
             elif(command == 4):
+                memory.deleteCustomersMonitors(item)
                 message = 'Deletado com sucesso' if memory.deleteItem(item) else 'Falha ao deletar'
 
             if monitoring == 1:
