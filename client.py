@@ -33,7 +33,8 @@ def sendCommand(newstdin):
                 jsonItem = {
                     'command': command,
                     'item': mapItem,
-                    'string': message
+                    'string': message,
+                    'monitoring': False
                 }
                 UDPClientSocket.sendto(str.encode(json.dumps(jsonItem)), serverAddressPort)
             else:

@@ -17,6 +17,7 @@ class CrudGrpc(crud_pb2_grpc.CrudGrpcServicer):
             'data': {
                 'command': request.command,
                 'item': request.item,
-                'string': request.message
+                'string': request.message,
+                'monitoring': request.monitoring
             }
         }

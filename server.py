@@ -86,6 +86,7 @@ def recipientThread(commandsPile, persistencePile, responsePile, memory):
             command = int(task['data']['command'])
             item = task['data']['item']
             string = task['data']['string']
+            monitoring = task['data']['monitoring']
 
             if(command == 1):
                 memory.createItem({item: string})
@@ -97,6 +98,11 @@ def recipientThread(commandsPile, persistencePile, responsePile, memory):
             elif(command == 4):
                 message = 'Deletado com sucesso' if memory.deleteItem(item) else 'Falha ao deletar'
 
+            if monitoring == 1:
+                memory.addMonitoring(item, task['client'])
+
+            sendNotice(item, memory)
+                
             # send command to persistencePile
             persistencePile.insert(memory.readAll())
 
@@ -105,6 +111,14 @@ def recipientThread(commandsPile, persistencePile, responsePile, memory):
                 'message': message,
                 'client': task['client']
             })
+
+def sendNotice(item, memory):
+    customers = memory.getCustomersMonitors(item)
+    if len(customers) != 0:
+        for customer in customers:
+            message = 'Chave ' + str(item) + ' foi consultada ou modificada!'
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.sendto(message.encode(), customer)
 
 def persistenceThread(persistencePile, memory):
     while True:

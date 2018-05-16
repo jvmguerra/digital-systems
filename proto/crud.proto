@@ -20,6 +20,7 @@ message ItemRequest {
   string message = 3;
   string ip = 4;
   int32 port = 5;
+  int32 monitoring = 6;
 }
 
 // The response message containing the greetings

@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='crud.proto',
   package='crudGrpc',
   syntax='proto3',
-  serialized_pb=_b('\n\ncrud.proto\x12\x08\x63rudGrpc\"W\n\x0bItemRequest\x12\x0f\n\x07\x63ommand\x18\x01 \x01(\t\x12\x0c\n\x04item\x18\x02 \x01(\t\x12\x0f\n\x07message\x18\x03 \x01(\t\x12\n\n\x02ip\x18\x04 \x01(\t\x12\x0c\n\x04port\x18\x05 \x01(\x05\"\x1b\n\x08Response\x12\x0f\n\x07message\x18\x01 \x01(\t2F\n\x08\x43rudGrpc\x12:\n\x0bSendCommand\x12\x15.crudGrpc.ItemRequest\x1a\x12.crudGrpc.Response\"\x00\x42\x36\n\x1bio.grpc.examples.helloworldB\x0fHelloWorldProtoP\x01\xa2\x02\x03HLWb\x06proto3')
+  serialized_pb=_b('\n\ncrud.proto\x12\x08\x63rudGrpc\"k\n\x0bItemRequest\x12\x0f\n\x07\x63ommand\x18\x01 \x01(\t\x12\x0c\n\x04item\x18\x02 \x01(\t\x12\x0f\n\x07message\x18\x03 \x01(\t\x12\n\n\x02ip\x18\x04 \x01(\t\x12\x0c\n\x04port\x18\x05 \x01(\x05\x12\x12\n\nmonitoring\x18\x06 \x01(\x05\"\x1b\n\x08Response\x12\x0f\n\x07message\x18\x01 \x01(\t2F\n\x08\x43rudGrpc\x12:\n\x0bSendCommand\x12\x15.crudGrpc.ItemRequest\x1a\x12.crudGrpc.Response\"\x00\x42\x36\n\x1bio.grpc.examples.helloworldB\x0fHelloWorldProtoP\x01\xa2\x02\x03HLWb\x06proto3')
 )
 
 
@@ -67,6 +67,13 @@ _ITEMREQUEST = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='monitoring', full_name='crudGrpc.ItemRequest.monitoring', index=5,
+      number=6, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -80,7 +87,7 @@ _ITEMREQUEST = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=24,
-  serialized_end=111,
+  serialized_end=131,
 )
 
 
@@ -110,8 +117,8 @@ _RESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=113,
-  serialized_end=140,
+  serialized_start=133,
+  serialized_end=160,
 )
 
 DESCRIPTOR.message_types_by_name['ItemRequest'] = _ITEMREQUEST
@@ -142,8 +149,8 @@ _CRUDGRPC = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   options=None,
-  serialized_start=142,
-  serialized_end=212,
+  serialized_start=162,
+  serialized_end=232,
   methods=[
   _descriptor.MethodDescriptor(
     name='SendCommand',
