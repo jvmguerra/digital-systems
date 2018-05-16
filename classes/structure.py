@@ -41,16 +41,15 @@ class Structure(object):
             return False
 
     def addMonitoring(self, item, client):
-        if item in self.dict:
-            if item in self.monitoringDict:
-                if not self.onMonitoringAlreadyExists(item, client):
-                    self.monitoringDict[item].append(client)
-                    print(self.monitoringDict)
-                else:
-                    print('Chave ja monitorada!')
-            else:
-                self.monitoringDict[item] = [client]
+        if item in self.monitoringDict:
+            if not self.onMonitoringAlreadyExists(item, client):
+                self.monitoringDict[item].append(client)
                 print(self.monitoringDict)
+            else:
+                print('Chave ja monitorada!')
+        else:
+            self.monitoringDict[item] = [client]
+            print(self.monitoringDict)
 
     def onMonitoringAlreadyExists(self, item, client):
         exist = False
