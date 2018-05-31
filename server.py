@@ -30,6 +30,11 @@ def initializeThreads(newstdin, commandsPile, persistencePile, responsePile, mem
     initRecipientThread(commandsPile, persistencePile, responsePile, memory)
     initPersistenceThread(persistencePile, memory)
     initResponseThread(responsePile)
+    initLogThread(memory)
+
+def initLogThread(memory):
+    process = multiprocessing.Process(target = loggerThread, args = (memory, ))
+    jobs.append(process)
 
 def initReceiverThread(serverAddressPort, commandsPile):
     process = multiprocessing.Process(target = receiverThread, args = (serverAddressPort, commandsPile))
@@ -62,6 +67,12 @@ def receiverGrpcThread(serverAddressPort, commandsPile):
             time.sleep(_ONE_DAY_IN_SECONDS)
     except KeyboardInterrupt:
         server.stop(0)
+
+def loggerThread(memory):
+    while True:
+        if not memory.logListIsEmpty():
+            memory.saveLogListAnLogFile()
+
 
 def receiverThread(serverAddressPort, commandsPile):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -105,6 +116,8 @@ def recipientThread(commandsPile, persistencePile, responsePile, memory):
                 
             # send command to persistencePile
             persistencePile.insert(memory.readAll())
+
+            memory.addMethodAnLogList({'command': command, 'item': item, 'data': string})
 
             # send message y/n to responsePile
             responsePile.insert({
@@ -152,6 +165,7 @@ def main():
     # Shared memory
     memory = manager.Structure()
     memory.loadItems()
+    memory.loadItensOfLogFile()
 
     # Initializes all of the servers 4 'threads'
     newstdin = os.fdopen(os.dup(sys.stdin.fileno()))

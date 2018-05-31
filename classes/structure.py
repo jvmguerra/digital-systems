@@ -4,6 +4,8 @@ class Structure(object):
     def __init__(self):
         self.dict = dict()
         self.monitoringDict = dict()
+        self.logList = []
+        self.logsToRun = []
 
     def readAll(self):
         return self.dict
@@ -67,3 +69,22 @@ class Structure(object):
     def deleteCustomersMonitors(self, item):
         if item in self.monitoringDict:
             del self.monitoringDict[item]
+
+    def logListIsEmpty(self):
+        return len(self.logList) == 0
+
+    def addMethodAnLogList(self, objMethod):
+        self.logList.append(objMethod)
+
+    def saveLogListAnLogFile(self):
+        file = open('log.txt', 'a')
+        for itemLog in self.logList:
+            file.write('%s\n' % json.dumps(itemLog))
+            file.close()
+        self.logList = []
+
+    def loadItensOfLogFile(self):
+        file = open('log.txt', 'r')
+        for item in file:
+            self.logsToRun.append(eval(item))
+        print(self.logsToRun)
