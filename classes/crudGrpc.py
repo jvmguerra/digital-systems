@@ -8,7 +8,6 @@ class CrudGrpc(crud_pb2_grpc.CrudGrpcServicer):
     def SendCommand(self, request, context):
         clientData = self.prepareClientData(request)
         self.commandPile.insert(clientData)
-        print(self.prepareClientData(request))
         return crud_pb2.Response(message='Comando inserido na pilha!')
 
     def prepareClientData(self, request):

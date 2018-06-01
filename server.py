@@ -57,7 +57,6 @@ def initResponseThread(responsePile):
     jobs.append(process)
 
 def receiverGrpcThread(serverAddressPort, commandsPile):
-    # print(serverAddressPort)
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     crud_pb2_grpc.add_CrudGrpcServicer_to_server(CrudGrpc(commandsPile), server)
     server.add_insecure_port(serverAddressPort[0] + ':' + str(serverAddressPort[1]))
@@ -115,9 +114,9 @@ def recipientThread(commandsPile, persistencePile, responsePile, memory):
             sendNotice(item, memory)
                 
             # send command to persistencePile
-            persistencePile.insert(memory.readAll())
+            # persistencePile.insert(memory.readAll())
 
-            memory.addMethodAnLogList({'command': command, 'item': item, 'data': string})
+            memory.addCommandAnLogList({'command': command, 'item': item, 'data': string, 'client': task['client'], 'monitoring': monitoring})
 
             # send message y/n to responsePile
             responsePile.insert({
@@ -146,6 +145,33 @@ def responseThread(responsePile):
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             s.sendto(task['message'].encode(), (str(task['client'][0]), int(task['client'][1])))
 
+def excuteLogCommands(memory):
+    commandsList = memory.getLogListToExecute()
+
+    for command in commandsList:
+        commandToExecute = command['command']
+        item = command['item']
+        data = command['data']
+        monitoring = command['monitoring']
+        client = command['client']
+        
+        if(commandToExecute == 1):
+            print('Criando novo item: chave ' + item)
+            memory.createItem({item: data})
+        elif(commandToExecute == 3):
+            if memory.updateItem({item: data}):
+                print('Item atualizado: chave ' + item)
+            else:
+                print('Item não encontrado')
+        elif(commandToExecute == 4):
+            if memory.deleteItem(item):
+                print('Item deletado: chave ' + item)
+            else:
+                print('Falha ao deletar')
+        elif(commandToExecute == 5):
+            if monitoring == 1:
+                memory.addMonitoring(item, (client[0], client[1]))
+
 config = configparser.ConfigParser()
 config.read('./settings.ini')
 
@@ -166,6 +192,7 @@ def main():
     memory = manager.Structure()
     memory.loadItems()
     memory.loadItensOfLogFile()
+    excuteLogCommands(memory)
 
     # Initializes all of the servers 4 'threads'
     newstdin = os.fdopen(os.dup(sys.stdin.fileno()))

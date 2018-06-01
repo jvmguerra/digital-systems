@@ -73,7 +73,8 @@ class Structure(object):
     def logListIsEmpty(self):
         return len(self.logList) == 0
 
-    def addMethodAnLogList(self, objMethod):
+    def addCommandAnLogList(self, objMethod):
+        # print(objMethod)
         self.logList.append(objMethod)
 
     def saveLogListAnLogFile(self):
@@ -87,4 +88,7 @@ class Structure(object):
         file = open('log.txt', 'r')
         for item in file:
             self.logsToRun.append(eval(item))
-        print(self.logsToRun)
+        # print(self.logsToRun)
+
+    def getLogListToExecute(self):
+        return self.logsToRun

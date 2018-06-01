@@ -85,7 +85,7 @@ bufferSize          = int(config.get('SERVER', 'packetBytes'))
 port = input('Digite uma porta para o cliente: ')
 
 UDPClientSocket     = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-ipAddress = socket.gethostbyname(socket.gethostname())
+ipAddress = str(config.get('SERVER', 'host'))
 clientAddress = (ipAddress, int(port))
 
 jobs                = []
