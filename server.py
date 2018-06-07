@@ -15,7 +15,9 @@ import json
 from classes.pile import Pile
 from classes.structure import Structure
 from classes.crudGrpc import CrudGrpc
+from apscheduler.schedulers.background import BackgroundScheduler
 
+sched = BackgroundScheduler()
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
 class MyManager(BaseManager):
@@ -72,6 +74,8 @@ def loggerThread(memory):
         if not memory.logListIsEmpty():
             memory.saveLogListAnLogFile()
 
+def persistLogs():
+    print('Every 120 seconds')
 
 def receiverThread(serverAddressPort, commandsPile):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -87,6 +91,8 @@ def receiverThread(serverAddressPort, commandsPile):
         commandsPile.insert(clientData)
 
 def recipientThread(commandsPile, persistencePile, responsePile, memory):
+    sched.add_job(persistLogs, 'interval', seconds = 120)
+    sched.start()
     while True:
         if not commandsPile.empty():
             message = 'Sucesso'
