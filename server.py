@@ -30,7 +30,6 @@ def initializeThreads(newstdin, commandsPile, persistencePile, responsePile, mem
     initReceiverThread(serverAddressPort, commandsPile)
     initReceiverGrpcThread(serverAddressPort, commandsPile)
     initRecipientThread(commandsPile, persistencePile, responsePile, memory)
-    initPersistenceThread(persistencePile, memory)
     initResponseThread(responsePile)
     initLogThread(memory)
 
@@ -74,8 +73,9 @@ def loggerThread(memory):
         if not memory.logListIsEmpty():
             memory.saveLogListAnLogFile()
 
-def persistLogs():
-    print('Every 120 seconds')
+def persistToArchive(persistencePile, memory):
+    print('Saving memory to archive')
+    persistenceThread(persistencePile, memory)
 
 def receiverThread(serverAddressPort, commandsPile):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -91,12 +91,11 @@ def receiverThread(serverAddressPort, commandsPile):
         commandsPile.insert(clientData)
 
 def recipientThread(commandsPile, persistencePile, responsePile, memory):
-    sched.add_job(persistLogs, 'interval', seconds = 120)
+    sched.add_job(persistToArchive, 'interval',[persistencePile, memory], seconds=10)
     sched.start()
     while True:
         if not commandsPile.empty():
             message = 'Sucesso'
-
             # execute task
             task = commandsPile.remove()
             command = int(task['data']['command'])
@@ -139,10 +138,10 @@ def sendNotice(item, memory):
             s.sendto(message.encode(), customer)
 
 def persistenceThread(persistencePile, memory):
-    while True:
-        if not persistencePile.empty():
-            task = persistencePile.remove()
-            memory.saveItems(task)
+    print(memory)
+    if not persistencePile.empty():
+        task = persistencePile.remove()
+        memory.saveItems(task)
 
 def responseThread(responsePile):
     while True:
@@ -152,9 +151,8 @@ def responseThread(responsePile):
             s.sendto(task['message'].encode(), (str(task['client'][0]), int(task['client'][1])))
 
 def excuteLogCommands(memory):
-    commandsList = memory.getLogListToExecute()
-
-    for command in commandsList:
+    while not memory.isLogsToRunEmpty():
+        command = memory.getLogToExecute()
         commandToExecute = command['command']
         item = command['item']
         data = command['data']

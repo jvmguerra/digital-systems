@@ -90,5 +90,9 @@ class Structure(object):
             self.logsToRun.append(eval(item))
         # print(self.logsToRun)
 
-    def getLogListToExecute(self):
-        return self.logsToRun
+    def isLogsToRunEmpty(self):
+        return len(self.logsToRun) == 0
+
+    def getLogToExecute(self):
+        item = self.logsToRun.pop(0)
+        return item
