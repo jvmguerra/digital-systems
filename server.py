@@ -19,6 +19,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 sched = BackgroundScheduler()
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
+_LOOP_FOR_PERSISTENCE_IN_SECONDS_ = 120
 
 class MyManager(BaseManager):
     pass
@@ -75,7 +76,7 @@ def loggerThread(memory):
             memory.saveLogListAnLogFile()
 
 def persistToArchive(memory):
-    sched.add_job(persistenceThread, 'interval', [memory], seconds=10)
+    sched.add_job(persistenceThread, 'interval', [memory], seconds=_LOOP_FOR_PERSISTENCE_IN_SECONDS_)
     sched.start()
 
 def receiverThread(serverAddressPort, commandsPile):
