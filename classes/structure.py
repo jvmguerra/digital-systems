@@ -14,8 +14,8 @@ class Structure(object):
         with open('data.json', 'r') as json_data:
             self.dict = json.load(json_data)
 
-    def saveItems(self, itens):
-        jsonTest = json.dumps(itens)
+    def saveItems(self):
+        jsonTest = json.dumps(self.dict)
         file = open('data.json', 'w')
         file.write(jsonTest)
         file.close()
@@ -96,3 +96,6 @@ class Structure(object):
     def getLogToExecute(self):
         item = self.logsToRun.pop(0)
         return item
+
+    def clearLogs(self):
+        open('log.txt', 'w').close()

@@ -27,6 +27,7 @@ MyManager.register('Pile', Pile)
 MyManager.register('Structure', Structure)
 
 def initializeThreads(newstdin, commandsPile, persistencePile, responsePile, memory):
+    # initPersistenceThread(memory)
     initReceiverThread(serverAddressPort, commandsPile)
     initReceiverGrpcThread(serverAddressPort, commandsPile)
     initRecipientThread(commandsPile, persistencePile, responsePile, memory)
@@ -49,8 +50,8 @@ def initRecipientThread(commandsPile, persistencePile, responsePile, memory):
     process = multiprocessing.Process(target = recipientThread, args = (commandsPile, persistencePile, responsePile, memory))
     jobs.append(process)
 
-def initPersistenceThread(persistencePile, memory):
-    process = multiprocessing.Process(target = persistenceThread, args = (persistencePile, memory))
+def initPersistenceThread(memory):
+    process = multiprocessing.Process(target = persistToArchive, args = (memory, ))
     jobs.append(process)
 
 def initResponseThread(responsePile):
@@ -73,9 +74,9 @@ def loggerThread(memory):
         if not memory.logListIsEmpty():
             memory.saveLogListAnLogFile()
 
-def persistToArchive(persistencePile, memory):
-    print('Saving memory to archive')
-    persistenceThread(persistencePile, memory)
+def persistToArchive(memory):
+    sched.add_job(persistenceThread, 'interval', [memory], seconds=10)
+    sched.start()
 
 def receiverThread(serverAddressPort, commandsPile):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -91,8 +92,7 @@ def receiverThread(serverAddressPort, commandsPile):
         commandsPile.insert(clientData)
 
 def recipientThread(commandsPile, persistencePile, responsePile, memory):
-    sched.add_job(persistToArchive, 'interval',[persistencePile, memory], seconds=10)
-    sched.start()
+    persistToArchive(memory)
     while True:
         if not commandsPile.empty():
             message = 'Sucesso'
@@ -137,11 +137,10 @@ def sendNotice(item, memory):
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             s.sendto(message.encode(), customer)
 
-def persistenceThread(persistencePile, memory):
-    print(memory)
-    if not persistencePile.empty():
-        task = persistencePile.remove()
-        memory.saveItems(task)
+def persistenceThread(memory):
+    print('Saving memory to archive')
+    memory.saveItems()
+    memory.clearLogs()
 
 def responseThread(responsePile):
     while True:
@@ -197,6 +196,7 @@ def main():
     memory.loadItems()
     memory.loadItensOfLogFile()
     excuteLogCommands(memory)
+    persistenceThread(memory) #save archive and clear logs
 
     # Initializes all of the servers 4 'threads'
     newstdin = os.fdopen(os.dup(sys.stdin.fileno()))
