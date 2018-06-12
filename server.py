@@ -188,7 +188,6 @@ def main():
     manager = MyManager()
     manager.start()
     commandsPile = manager.Pile()
-    persistencePile = manager.Pile()
     responsePile = manager.Pile()
 
     # Shared memory
